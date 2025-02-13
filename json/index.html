@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="fa">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JSON formatter</title>
+    <!-- لینک به فونت وزیرمتن از Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #ffffff;
+            --text-color: #000000;
+            --button-bg: #e0e0e0;
+            --button-text: #000000;
+            --border-color: #cccccc;
+        }
+
+        body.dark {
+            --bg-color: #2d2d2d;
+            --text-color: #e0e0e0;
+            --button-bg: #444444;
+            --button-text: #e0e0e0;
+            --border-color: #555555;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Vazirmatn', sans-serif;
+            margin: 0;
+            padding: 20px;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        h1, h2 {
+            text-align: center;
+        }
+
+        textarea, button {
+            font-family: 'Vazirmatn', sans-serif;
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 200px;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid var(--border-color);
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            resize: vertical;
+            font-size: 14px;
+        }
+
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            border: none;
+            cursor: pointer;
+            background-color: var(--button-bg);
+            color: var(--button-text);
+            border-radius: 5px;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        button:hover {
+            opacity: 0.8;
+        }
+
+        .toggle-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+
+        .error {
+            color: red;
+            font-weight: bold;
+            text-align: center;
+            direction: rtl;
+        }
+    </style>
+</head>
+<body class="dark">
+<button class="toggle-btn" onclick="toggleTheme()">تغییر حالت</button>
+<div class="container">
+    <h1>JSON formatter</h1>
+    <textarea id="jsonInput" placeholder="JSON خود را اینجا قرار دهید..."></textarea>
+    <div style="text-align: center;">
+        <button onclick="formatJSON()">فرمت کردن JSON</button>
+        <button onclick="minifyJSON()">کم‌حجم کردن JSON</button>
+        <button onclick="copyJSON()">کپی خروجی</button>
+    </div>
+    <h2>خروجی</h2>
+    <textarea id="jsonOutput" placeholder="نتیجه در اینجا نمایش داده می‌شود..." readonly></textarea>
+    <p id="errorMsg" class="error"></p>
+</div>
+<script>
+    // تابع برای فرمت کردن (pretty print) JSON
+    function formatJSON() {
+        const input = document.getElementById('jsonInput').value;
+        const output = document.getElementById('jsonOutput');
+        const errorMsg = document.getElementById('errorMsg');
+        errorMsg.textContent = '';
+        try {
+            const parsed = JSON.parse(input);
+            const formatted = JSON.stringify(parsed, null, 4);
+            output.value = formatted;
+        } catch (error) {
+            errorMsg.textContent = 'خطا: JSON وارد شده معتبر نیست.';
+            output.value = '';
+        }
+    }
+
+    // تابع برای کم‌حجم کردن (minify) JSON
+    function minifyJSON() {
+        const input = document.getElementById('jsonInput').value;
+        const output = document.getElementById('jsonOutput');
+        const errorMsg = document.getElementById('errorMsg');
+        errorMsg.textContent = '';
+        try {
+            const parsed = JSON.parse(input);
+            const minified = JSON.stringify(parsed);
+            output.value = minified;
+        } catch (error) {
+            errorMsg.textContent = 'خطا: JSON وارد شده معتبر نیست.';
+            output.value = '';
+        }
+    }
+
+    // تابع برای کپی کردن خروجی به کلیپ‌بورد
+    function copyJSON() {
+        const output = document.getElementById('jsonOutput');
+        output.select();
+        output.setSelectionRange(0, 99999); // برای دستگاه‌های موبایل
+        try {
+            document.execCommand("copy");
+            alert("خروجی کپی شد!");
+        } catch (err) {
+            alert("متأسفانه کپی کردن امکان‌پذیر نیست.");
+        }
+    }
+
+    // تابع تغییر تم (دارک/لایت)
+    function toggleTheme() {
+        document.body.classList.toggle('dark');
+    }
+</script>
+</body>
+</html>
