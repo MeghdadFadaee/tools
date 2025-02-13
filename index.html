@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="fa">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ابزارهای کاربردی</title>
+    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #f4f4f4;
+            --text-color: #333;
+            --card-bg: white;
+            --button-bg: #e0e0e0;
+            --button-text: #000;
+            --border-color: #cccccc;
+            --button-hover-bg: #d6d6d6;
+        }
+
+        body.dark {
+            --bg-color: #2d2d2d;
+            --text-color: #e0e0e0;
+            --card-bg: #444;
+            --button-bg: #555;
+            --button-text: #ffffff;
+            --border-color: #666;
+            --button-hover-bg: #777;
+        }
+
+        body {
+            font-family: 'Vazirmatn', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            text-align: center;
+            padding: 20px;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: auto;
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: var(--text-color);
+        }
+
+        ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        li {
+            margin: 10px 0;
+        }
+
+        textarea, button {
+            font-family: 'Vazirmatn', sans-serif;
+        }
+
+        a {
+            display: block;
+            padding: 10px;
+            background: var(--button-bg);
+            color: var(--button-text);
+            text-decoration: none;
+            border-radius: 5px;
+            transition: background 0.3s;
+        }
+
+        a:hover {
+            background: var(--button-hover-bg);
+        }
+
+        .toggle-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            background-color: var(--button-bg);
+            color: var(--button-text);
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s, color 0.3s;
+        }
+
+        .toggle-btn:hover {
+            background: var(--button-hover-bg);
+        }
+    </style>
+</head>
+<body class="dark">
+<button class="toggle-btn" onclick="toggleTheme()">تغییر حالت</button>
+<div class="container">
+    <h1>لیست ابزارهای کاربردی</h1>
+    <ul>
+        <li><a href="json">فرمت‌کننده JSON</a></li>
+        <!-- ابزارهای دیگر در اینجا اضافه شوند -->
+    </ul>
+</div>
+<script>
+    function toggleTheme() {
+        document.body.classList.toggle('dark');
+    }
+</script>
+</body>
+</html>
