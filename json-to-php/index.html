@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="fa">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>تبدیل JSON به PHP</title>
+  <!-- لینک به فونت وزیرمتن از Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-color: #ffffff;
+      --text-color: #000000;
+      --card-bg: #f4f4f4;
+      --button-bg: #e0e0e0;
+      --button-text: #000000;
+      --border-color: #cccccc;
+      --button-hover-bg: #d6d6d6;
+    }
+    body.dark {
+      --bg-color: #2d2d2d;
+      --text-color: #e0e0e0;
+      --card-bg: #444;
+      --button-bg: #555;
+      --button-text: #ffffff;
+      --border-color: #666;
+      --button-hover-bg: #777;
+    }
+    body {
+      font-family: 'Vazirmatn', sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      text-align: center;
+      padding: 20px;
+      transition: background-color 0.3s, color 0.3s;
+    }
+    .container {
+      max-width: 800px;
+      margin: auto;
+      background: var(--card-bg);
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+    h1, h2 {
+      color: var(--text-color);
+      text-align: center;
+    }
+    textarea, button {
+      font-family: 'Vazirmatn', sans-serif;
+    }
+    textarea {
+      width: 100%;
+      min-height: 200px;
+      padding: 10px;
+      margin-bottom: 10px;
+      border: 1px solid var(--border-color);
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      resize: vertical;
+      font-size: 14px;
+    }
+    button {
+      padding: 10px 20px;
+      margin: 5px;
+      border: none;
+      cursor: pointer;
+      background-color: var(--button-bg);
+      color: var(--button-text);
+      border-radius: 5px;
+      transition: background 0.3s, color 0.3s;
+    }
+    button:hover {
+      background: var(--button-hover-bg);
+    }
+    .toggle-btn {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+    }
+    .error {
+      color: red;
+      font-weight: bold;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <button class="toggle-btn" onclick="toggleTheme()">تغییر حالت</button>
+  <div class="container">
+    <h1>تبدیل JSON به PHP</h1>
+    <textarea id="jsonInput" placeholder="JSON خود را اینجا قرار دهید..."></textarea>
+    <div style="text-align: center;">
+      <button onclick="convertJSONtoPHP()">تبدیل JSON به PHP</button>
+      <button onclick="copyPHP()">کپی خروجی</button>
+    </div>
+    <h2>خروجی</h2>
+    <textarea id="phpOutput" placeholder="نتیجه در اینجا نمایش داده می‌شود..." readonly></textarea>
+    <p id="errorMsg" class="error"></p>
+  </div>
+  <script>
+    // تابع تبدیل JSON به کد PHP با فرورفتگی مناسب
+    function convertJSONtoPHP() {
+      const input = document.getElementById('jsonInput').value;
+      const output = document.getElementById('phpOutput');
+      const errorMsg = document.getElementById('errorMsg');
+      errorMsg.textContent = '';
+      try {
+        const data = JSON.parse(input);
+        const phpCode = convertToPHP(data, 0);
+        output.value = phpCode;
+      } catch (error) {
+        errorMsg.textContent = 'خطا: JSON وارد شده معتبر نیست.';
+        output.value = '';
+      }
+    }
+    
+    // تابع بازگشتی جهت تبدیل به فرمت PHP با فرورفتگی (indentation)
+    function convertToPHP(value, indentLevel) {
+      const indent = '    '.repeat(indentLevel);
+      const childIndent = '    '.repeat(indentLevel + 1);
+      
+      if (Array.isArray(value)) {
+        if (value.length === 0) return '[]';
+        const elements = value.map(item => childIndent + convertToPHP(item, indentLevel + 1));
+        return '[\n' + elements.join(',\n') + '\n' + indent + ']';
+      } else if (typeof value === 'object' && value !== null) {
+        const entries = Object.entries(value).map(([key, val]) => {
+          return childIndent + "'" + key + "' => " + convertToPHP(val, indentLevel + 1);
+        });
+        if (entries.length === 0) return '[]';
+        return '[\n' + entries.join(',\n') + '\n' + indent + ']';
+      } else if (typeof value === 'string') {
+        return "'" + value.replace(/'/g, "\\'") + "'";
+      } else if (typeof value === 'number' || typeof value === 'boolean') {
+        return String(value);
+      } else if (value === null) {
+        return 'null';
+      } else {
+        return "''";
+      }
+    }
+    
+    // تابع کپی خروجی به کلیپ‌بورد
+    function copyPHP() {
+      const output = document.getElementById('phpOutput');
+      output.select();
+      output.setSelectionRange(0, 99999); // برای دستگاه‌های موبایل
+      try {
+        document.execCommand("copy");
+        alert("خروجی کپی شد!");
+      } catch (err) {
+        alert("متأسفانه کپی کردن امکان‌پذیر نیست.");
+      }
+    }
+    
+    // تابع تغییر تم (دارک/لایت)
+    function toggleTheme() {
+      document.body.classList.toggle('dark');
+    }
+  </script>
+</body>
+</html>
