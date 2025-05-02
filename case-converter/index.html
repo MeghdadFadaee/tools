@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="fa">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مبدل حروف به حالت‌های مختلف</title>
+    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #ffffff;
+            --text-color: #000000;
+            --card-bg: #f4f4f4;
+            --button-bg: #e0e0e0;
+            --button-text: #000000;
+            --border-color: #cccccc;
+            --button-hover-bg: #d6d6d6;
+        }
+        body.dark {
+            --bg-color: #2d2d2d;
+            --text-color: #e0e0e0;
+            --card-bg: #444;
+            --button-bg: #555;
+            --button-text: #ffffff;
+            --border-color: #666;
+            --button-hover-bg: #777;
+        }
+        body {
+            font-family: 'Vazirmatn', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            padding: 20px;
+            transition: background-color 0.3s, color 0.3s;
+            text-align: center;
+        }
+        .container {
+            max-width: 800px;
+            margin: auto;
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 10px;
+        }
+        textarea, button {
+            font-family: 'Vazirmatn', sans-serif;
+        }
+        textarea {
+            width: 100%;
+            min-height: 150px;
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            resize: vertical;
+            margin-bottom: 10px;
+            box-sizing: border-box;
+        }
+        button {
+            margin: 5px;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            background-color: var(--button-bg);
+            color: var(--button-text);
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        button:hover {
+            background-color: var(--button-hover-bg);
+        }
+        .toggle-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+        }
+        .button-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body class="dark">
+<button class="toggle-btn" onclick="toggleTheme()">تغییر حالت</button>
+<div class="container">
+    <h1>تبدیل متن به حالت‌های مختلف</h1>
+    <label for="textArea"></label>
+    <textarea id="textArea" placeholder="متن خود را اینجا وارد کنید..."></textarea>
+    <div class="button-grid">
+        <button onclick="convertCase('upper')">UPPER CASE</button>
+        <button onclick="convertCase('lower')">lower case</button>
+        <button onclick="convertCase('title')">Title Case</button>
+        <button onclick="convertCase('camel')">camelCase</button>
+        <button onclick="convertCase('pascal')">PascalCase</button>
+        <button onclick="convertCase('snake')">snake_case</button>
+        <button onclick="convertCase('kebab')">kebab-case</button>
+        <button onclick="convertCase('dot')">dot.case</button>
+<!--        <button onclick="undotJson()">Array::undot</button>-->
+    </div>
+    <button onclick="copyText()">📋 کپی متن</button>
+</div>
+<script>
+    function toggleTheme() {
+        document.body.classList.toggle('dark');
+    }
+
+    function convertCase(type) {
+        const textArea = document.getElementById("textArea");
+        const input = textArea.value;
+        const words = input.match(/\w+/g) || [];
+        let result = '';
+
+        switch (type) {
+            case 'upper':
+                result = input.toUpperCase(); break;
+            case 'lower':
+                result = input.toLowerCase(); break;
+            case 'title':
+                result = words.map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' '); break;
+            case 'camel':
+                result = words.map((w, i) => i === 0 ? w.toLowerCase() : w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(''); break;
+            case 'pascal':
+                result = words.map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(''); break;
+            case 'snake':
+                result = words.map(w => w.toLowerCase()).join('_'); break;
+            case 'kebab':
+                result = words.map(w => w.toLowerCase()).join('-'); break;
+            case 'dot':
+                result = words.map(w => w.toLowerCase()).join('.'); break;
+        }
+        textArea.value = result;
+    }
+
+    function undotJson() {
+        const textArea = document.getElementById("textArea");
+        let input;
+        try {
+            input = JSON.parse(textArea.value);
+        } catch (e) {
+            alert("ورودی باید JSON معتبر باشد.");
+            return;
+        }
+        const result = {};
+        for (const key in input) {
+            const parts = key.split('.');
+            let current = result;
+            for (let i = 0; i < parts.length; i++) {
+                const part = parts[i];
+                if (i === parts.length - 1) {
+                    current[part] = input[key];
+                } else {
+                    current = current[part] = current[part] || {};
+                }
+            }
+        }
+        textArea.value = JSON.stringify(result, null, 2);
+    }
+
+    function copyText() {
+        const textArea = document.getElementById("textArea");
+        textArea.select();
+        textArea.setSelectionRange(0, 99999);
+        navigator.clipboard.writeText(textArea.value);
+    }
+</script>
+</body>
+</html>
