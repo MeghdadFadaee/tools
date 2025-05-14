@@ -33,7 +33,7 @@
             text-align: center;
         }
         .container {
-            max-width: 800px;
+            max-width: 900px;
             margin: auto;
             background: var(--card-bg);
             padding: 20px;
@@ -95,7 +95,9 @@
         <button onclick="convertCase('snake')">snake_case</button>
         <button onclick="convertCase('kebab')">kebab-case</button>
         <button onclick="convertCase('dot')">dot.case</button>
-<!--        <button onclick="undotJson()">Array::undot</button>-->
+        <button onclick="convertDigits('fa')">تبدیل به اعداد فارسی</button>
+        <button onclick="convertDigits('en')">تبدیل به اعداد انگلیسی</button>
+        <button onclick="undotJson()">Arr::undot</button>
     </div>
     <button onclick="copyText()">📋 کپی متن</button>
 </div>
@@ -154,6 +156,16 @@
             }
         }
         textArea.value = JSON.stringify(result, null, 2);
+    }
+
+    function convertDigits(target) {
+        const textArea = document.getElementById("textArea");
+        const mapFaToEn = {'۰':'0','۱':'1','۲':'2','۳':'3','۴':'4','۵':'5','۶':'6','۷':'7','۸':'8','۹':'9'};
+        const mapEnToFa = {'0':'۰','1':'۱','2':'۲','3':'۳','4':'۴','5':'۵','6':'۶','7':'۷','8':'۸','9':'۹'};
+
+        textArea.value = textArea.value.replace(/[۰-۹0-9]/g, d => {
+            return target === 'fa' ? mapEnToFa[d] || d : mapFaToEn[d] || d;
+        });
     }
 
     function copyText() {
