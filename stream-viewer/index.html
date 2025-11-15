@@ -1,0 +1,397 @@
+<!doctype html>
+
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Stream API Viewer</title>
+  <style>
+    /* Modern, minimal, and professional styling */
+    :root{
+      --bg:#0f1724; --card:#0b1220; --muted:#94a3b8; --accent:#7c3aed; --glass:rgba(255,255,255,0.04);
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", "Courier New", monospace;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0;font-family:Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;color:#e6eef8;background:linear-gradient(180deg,#071020 0%, #071223 50%, #081229 100%);}
+    .wrap{max-width:1100px;margin:40px auto;padding:24px}.card{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border-radius:14px;padding:18px;box-shadow:0 6px 30px rgba(2,6,23,0.6);border:1px solid rgba(255,255,255,0.03)}
+
+header{display:flex;gap:16px;align-items:center;margin-bottom:12px}
+h1{font-size:20px;margin:0}
+p.lead{margin:0;color:var(--muted);font-size:13px}
+
+.grid{display:grid;grid-template-columns:1fr 420px;gap:16px}
+
+.controls{display:flex;flex-direction:column;gap:12px}
+label{font-size:12px;color:var(--muted);display:block;margin-bottom:6px}
+input[type="text"], select, textarea{width:100%;padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,0.04);background:var(--glass);color:#e7f0ff;font-size:14px}
+textarea{min-height:120px;resize:vertical}
+
+.row{display:flex;gap:8px}
+.row > *{flex:1}
+.btn{padding:10px 12px;border-radius:10px;border:0;background:linear-gradient(90deg,var(--accent),#4f46e5);color:white;font-weight:600;cursor:pointer}
+.btn.ghost{background:transparent;border:1px solid rgba(255,255,255,0.05);color:var(--muted)}
+.btn.warn{background:linear-gradient(90deg,#f97316,#fb923c)}
+
+.small{font-size:13px}
+.meta{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.pill{background:rgba(255,255,255,0.03);padding:6px 10px;border-radius:999px;border:1px solid rgba(255,255,255,0.02);font-size:12px;color:var(--muted)}
+
+/* output */
+.output{background:#001226;border-radius:12px;padding:12px;min-height:320px;overflow:auto;border:1px solid rgba(255,255,255,0.03)}
+pre{margin:0;font-family:var(--mono);white-space:pre-wrap;font-size:13px;line-height:1.5;color:#e6f1ff}
+
+.controls-foot{display:flex;gap:8px;justify-content:space-between;align-items:center}
+.settings{display:flex;gap:8px;align-items:center}
+
+.hdrs{max-height:100px;overflow:auto;padding:8px;background:linear-gradient(180deg,rgba(255,255,255,0.01),transparent);border-radius:8px;border:1px solid rgba(255,255,255,0.02);font-size:13px;color:var(--muted)}
+
+footer{margin-top:14px;color:var(--muted);font-size:13px}
+
+@media (max-width:980px){.grid{grid-template-columns:1fr;}.card{padding:12px}}
+
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <header>
+        <div>
+          <h1>Stream API Viewer</h1>
+          <p class="lead">Connect to a streaming API and view the response in real time. Supports text/event-stream, NDJSON and generic chunked text.</p>
+        </div>
+      </header><div class="grid">
+    <section class="controls">
+      <div>
+        <label for="url">API URL</label>
+        <input id="url" type="text" placeholder="https://api.example.com/stream" value="">
+      </div>
+
+      <div class="row">
+        <div>
+          <label for="method">Method</label>
+          <select id="method"><option>GET</option><option>POST</option><option>PUT</option><option>DELETE</option></select>
+        </div>
+        <div>
+          <label for="contentType">Content-Type</label>
+          <select id="contentType"><option value="">(none)</option><option value="application/json">application/json</option><option value="text/plain">text/plain</option><option value="application/x-ndjson">application/x-ndjson</option></select>
+        </div>
+      </div>
+
+      <div>
+        <label>Headers (JSON object) <span style="color:var(--muted);font-size:12px">e.g. {"Authorization":"Bearer ..."}</span></label>
+        <input id="headers" type="text" placeholder='{"Accept":"text/event-stream"}'>
+      </div>
+
+      <div>
+        <label for="body">Body (for POST/PUT)</label>
+        <textarea id="body" placeholder='{"prompt":"hello"}'></textarea>
+      </div>
+
+      <div class="controls-foot">
+        <div class="settings">
+          <button id="startBtn" class="btn">Start</button>
+          <button id="stopBtn" class="btn ghost" disabled>Stop</button>
+          <button id="clearBtn" class="btn ghost">Clear</button>
+        </div>
+        <div class="meta">
+          <span id="statusPill" class="pill">idle</span>
+          <span id="bytesPill" class="pill">0 bytes</span>
+          <span id="timePill" class="pill">00:00</span>
+        </div>
+      </div>
+
+      <div style="margin-top:12px;display:flex;gap:8px;align-items:center">
+        <label class="small"><input id="autoScroll" type="checkbox" checked> Auto-scroll</label>
+        <label class="small"><input id="pretty" type="checkbox" checked> Pretty-print JSON/NDJSON</label>
+        <label class="small"><input id="showRaw" type="checkbox"> Show raw bytes</label>
+      </div>
+
+      <div style="margin-top:12px">
+        <div style="display:flex;gap:8px">
+          <button id="copyBtn" class="btn ghost">Copy</button>
+          <button id="downloadBtn" class="btn ghost">Download</button>
+        </div>
+      </div>
+
+    </section>
+
+    <aside>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div class="card" style="padding:12px;">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div style="font-weight:600">Response Preview</div>
+            <div style="font-size:12px;color:var(--muted)">Live stream output</div>
+          </div>
+
+          <div id="output" class="output" style="margin-top:10px;">
+            <pre id="pre">(no data yet)</pre>
+          </div>
+
+          <div style="margin-top:10px;display:flex;gap:8px;align-items:center;justify-content:space-between">
+            <div class="hdrs" id="respHeaders">Response headers: —</div>
+            <div style="display:flex;gap:8px">
+              <button id="toggleWrap" class="btn ghost">Toggle Wrap</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" style="padding:12px">
+          <div style="font-weight:600;margin-bottom:8px">Notes & Tips</div>
+          <ul style="margin:0;color:var(--muted);font-size:13px;padding-left:18px">
+            <li>Target API must allow CORS from this page (Access-Control-Allow-Origin).</li>
+            <li>Prefer <code>text/event-stream</code> or newline-delimited (NDJSON) for progressive parsing.</li>
+            <li>For binary data the viewer will show decoded text; you can toggle raw bytes.</li>
+          </ul>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <footer>
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <div>Made with ❤️ — Stream API Viewer</div>
+      <div style="color:var(--muted);font-size:12px">Technical: Uses Fetch + ReadableStream; no server required.</div>
+    </div>
+  </footer>
+</div>
+
+  </div><script>
+// Stream API Viewer - single file
+// UI bindings
+const $ = id => document.getElementById(id);
+const urlEl = $('url');
+const startBtn = $('startBtn');
+const stopBtn = $('stopBtn');
+const clearBtn = $('clearBtn');
+const pre = $('pre');
+const statusPill = $('statusPill');
+const bytesPill = $('bytesPill');
+const timePill = $('timePill');
+const headersInput = $('headers');
+const respHeaders = $('respHeaders');
+const bodyInput = $('body');
+const methodEl = $('method');
+const contentTypeEl = $('contentType');
+const autoScrollEl = $('autoScroll');
+const prettyEl = $('pretty');
+const copyBtn = $('copyBtn');
+const downloadBtn = $('downloadBtn');
+const showRawEl = $('showRaw');
+const toggleWrapBtn = $('toggleWrap');
+
+let controller = null;
+let reader = null;
+let startTime = null;
+let totalBytes = 0;
+let buffer = '';
+let stopped = false;
+let chunks = []; // store for download
+
+function setStatus(s){ statusPill.textContent = s; }
+function fmtTime(ms){
+  const s = Math.floor(ms/1000);
+  const mm = String(Math.floor(s/60)).padStart(2,'0');
+  const ss = String(s%60).padStart(2,'0');
+  return `${mm}:${ss}`;
+}
+
+function appendToOutput(text, opts={raw:false}){
+  // Append text; if showRaw checked and opts.raw, show hex/bytes, else text
+  if(pre.textContent === '(no data yet)') pre.textContent = '';
+  pre.textContent += text;
+  if(autoScrollEl.checked){
+    pre.parentElement.scrollTop = pre.parentElement.scrollHeight;
+  }
+}
+
+function clearOutput(){ pre.textContent='(no data yet)'; chunks=[]; totalBytes=0; bytesPill.textContent='0 bytes'; respHeaders.textContent='Response headers: —'; }
+
+clearBtn.addEventListener('click', ()=>{ clearOutput(); });
+
+copyBtn.addEventListener('click', ()=>{
+  navigator.clipboard.writeText(pre.textContent).then(()=>{
+    setStatus('copied'); setTimeout(()=>setStatus('streaming'),800);
+  }).catch(()=>setStatus('copy failed'));
+});
+
+downloadBtn.addEventListener('click', ()=>{
+  const blob = new Blob([chunks.join('')], {type:'text/plain'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = 'stream-output.txt'; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+});
+
+toggleWrapBtn.addEventListener('click', ()=>{
+  const el = pre;
+  if(el.style.whiteSpace === 'pre') el.style.whiteSpace = 'pre-wrap'; else el.style.whiteSpace = 'pre';
+});
+
+stopBtn.addEventListener('click', ()=>{ stopStreaming('stopped by user'); });
+
+function stopStreaming(msg){
+  stopped = true;
+  setStatus(msg||'stopped');
+  if(controller) controller.abort();
+  if(reader) reader.cancel().catch(()=>{});
+  stopBtn.disabled = true; startBtn.disabled = false;
+}
+
+async function startStreaming(){
+  clearOutput();
+  stopped = false;
+  controller = new AbortController();
+  const signal = controller.signal;
+  startBtn.disabled = true; stopBtn.disabled = false;
+  setStatus('connecting...');
+  startTime = Date.now();
+
+  let headers = {};
+  try{
+    const raw = headersInput.value.trim();
+    if(raw) headers = JSON.parse(raw);
+  }catch(e){ setStatus('invalid headers JSON'); startBtn.disabled=false; stopBtn.disabled=true; return; }
+
+  const method = methodEl.value;
+  const contentType = contentTypeEl.value;
+  if(contentType && !headers['Content-Type']) headers['Content-Type'] = contentType;
+
+  let body = undefined;
+  if(method !== 'GET'){
+    body = bodyInput.value || undefined;
+    if(body && headers['Content-Type']==='application/json'){
+      try{ JSON.parse(body); }catch(e){ setStatus('invalid JSON body'); startBtn.disabled=false; stopBtn.disabled=true; return; }
+    }
+  }
+
+  try{
+    const resp = await fetch(urlEl.value, {method, headers, body, signal});
+    // show response headers
+    const hdrs = {};
+    resp.headers.forEach((v,k)=> hdrs[k]=v);
+    respHeaders.textContent = 'Response headers: ' + JSON.stringify(hdrs);
+
+    if(!resp.ok){
+      setStatus(`HTTP ${resp.status}`); startBtn.disabled=false; stopBtn.disabled=true; return;
+    }
+
+    setStatus('streaming');
+
+    // if no body stream, fallback to text
+    if(!resp.body){
+      const txt = await resp.text(); appendToOutput(txt); setStatus('finished'); startBtn.disabled=false; stopBtn.disabled=true; return;
+    }
+
+    const contentTypeResp = resp.headers.get('content-type') || '';
+
+    // Use a reader to consume chunks
+    reader = resp.body.getReader();
+    const decoder = new TextDecoder();
+    buffer = '';
+    totalBytes = 0;
+    chunks = [];
+
+    // streaming loop
+    while(true){
+      const {value, done} = await reader.read();
+      if(done) break;
+      if(stopped) break;
+      totalBytes += value.byteLength;
+      bytesPill.textContent = `${totalBytes} bytes`;
+
+      // decode chunk
+      const chunkText = decoder.decode(value, {stream:true});
+      chunks.push(chunkText);
+
+      // If user wants raw bytes shown
+      if(showRawEl.checked){
+        // show hex of bytes
+        const hex = Array.from(value).map(b=>b.toString(16).padStart(2,'0')).join(' ');
+        appendToOutput('\n[hex] '+hex+'\n');
+        continue;
+      }
+
+      // choose parser based on content-type
+      if(contentTypeResp.includes('text/event-stream')){
+        buffer += chunkText;
+        // handle SSE events separated by \n\n
+        let parts = buffer.split('\n\n');
+        buffer = parts.pop(); // last might be partial
+        for(const p of parts){
+          // extract data: lines
+          const lines = p.split('\n').filter(Boolean);
+          const dataLines = lines.filter(l=>l.startsWith('data:')).map(l=>l.replace(/^data:\s?/,'')).join('\n');
+          appendToOutput('\n' + dataLines + '\n');
+        }
+      } else if(contentTypeResp.includes('ndjson') || contentTypeResp.includes('application/x-ndjson') || contentTypeResp.includes('json-seq')){
+        buffer += chunkText;
+        let lines = buffer.split(/\r?\n/);
+        buffer = lines.pop();
+        for(const line of lines){
+          if(!line.trim()) continue;
+          if(prettyEl.checked){
+            try{ const obj = JSON.parse(line); appendToOutput(JSON.stringify(obj, null, 2) + '\n'); }catch(e){ appendToOutput(line+'\n'); }
+          } else appendToOutput(line+'\n');
+        }
+      } else if(contentTypeResp.includes('application/json')){
+        // JSON stream that might be partial chunks. We'll append as we go and try to pretty-print complete JSON at the end.
+        buffer += chunkText;
+        // Attempt to parse full buffer (may fail until finished)
+        if(prettyEl.checked){
+          try{
+            const obj = JSON.parse(buffer);
+            // replace output with pretty-printed full JSON
+            pre.textContent = JSON.stringify(obj, null, 2) + '\n';
+          }catch(e){
+            // can't parse yet — show incremental chunks
+            appendToOutput(chunkText);
+          }
+        } else appendToOutput(chunkText);
+      } else {
+        // Generic text chunks (plain text or mixed). We'll try to treat newline-delimited JSON heuristically.
+        buffer += chunkText;
+        // If pretty and it looks like NDJSON, split by newlines
+        if(prettyEl.checked){
+          let lines = buffer.split(/\r?\n/);
+          buffer = lines.pop();
+          for(const line of lines){
+            if(!line.trim()) continue;
+            try{ const obj = JSON.parse(line); appendToOutput(JSON.stringify(obj, null, 2)+'\n'); }
+            catch(e){ appendToOutput(line+'\n'); }
+          }
+        }else{
+          appendToOutput(chunkText);
+        }
+      }
+
+      // update elapsed
+      timePill.textContent = fmtTime(Date.now()-startTime);
+    }
+
+    // done reading
+    if(buffer && !showRawEl.checked){
+      // flush remaining buffer
+      if(prettyEl.checked){
+        try{ const obj = JSON.parse(buffer); appendToOutput('\n'+JSON.stringify(obj, null, 2)+'\n'); }
+        catch(e){ appendToOutput(buffer); }
+      }else appendToOutput(buffer);
+    }
+
+    setStatus('finished');
+  }catch(err){
+    if(err.name === 'AbortError'){
+      setStatus('aborted');
+    }else{
+      console.error(err);
+      setStatus('error: '+(err.message||err));
+    }
+  }finally{
+    startBtn.disabled = false; stopBtn.disabled = true;
+  }
+}
+
+startBtn.addEventListener('click', ()=>{ startStreaming(); });
+
+// initialize
+clearOutput();
+setStatus('idle');
+</script></body>
+</html>
